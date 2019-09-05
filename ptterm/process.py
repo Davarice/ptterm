@@ -20,8 +20,11 @@ __all__ = (
     'Process',
 )
 
-def create_terminal(command, before_exec_func):
-    if is_windows():
+def create_terminal(command, before_exec_func, fake=False):
+    if fake:
+        from .backends.simulated import SimTerminal
+        return SimTerminal()
+    elif is_windows():
         from .backends.win32 import Win32Terminal
         return Win32Terminal()
     else:
@@ -43,7 +46,7 @@ class Process(object):
     :param invalidate: When the screen content changes, and the renderer needs
         to redraw the output, this callback is called.
     :param bell_func: Called when the process does a `bell`.
-    :param commmand: List of command line arguments.
+    :param command: List of command line arguments.
         For instance: `['python', '-c', 'print("test")']`
     :param before_exec_func: Function which is called in the child process,
         right before calling `exec`. Useful for instance for changing the
@@ -52,9 +55,12 @@ class Process(object):
     :param has_priority: Callable that returns True when this Process should
         get priority in the event loop. (When this pane has the focus.)
         Otherwise output can be delayed.
+    :param bool sim_prompt: Whether or not to create a simulated Prompt instead
+        of a real Shell Process.
     """
     def __init__(self, invalidate, command=None, before_exec_func=None,
-                 bell_func=None, done_callback=None, has_priority=None):
+                 bell_func=None, done_callback=None, has_priority=None,
+                 sim_prompt=False):
         assert callable(invalidate)
         assert bell_func is None or callable(bell_func)
         assert done_callback is None or callable(done_callback)
@@ -69,7 +75,9 @@ class Process(object):
         self._reader_connected = False
 
         # Create terminal interface.
-        self.terminal = create_terminal(command, before_exec_func=before_exec_func)
+        self.terminal = create_terminal(command,
+                                        before_exec_func=before_exec_func,
+                                        fake=sim_prompt)
         self.terminal.add_input_ready_callback(self._read)
 
         if done_callback is not None:

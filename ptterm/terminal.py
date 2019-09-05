@@ -30,7 +30,8 @@ __all__ = (
 
 class _TerminalControl(UIControl):
     def __init__(self, command=['/bin/bash'], done_callback=None,
-                 before_exec_func=None, bell_func=None):
+                 before_exec_func=None, bell_func=None,
+                 sim_prompt=False):
         assert isinstance(command, list)
         assert done_callback is None or callable(done_callback)
         assert before_exec_func is None or callable(before_exec_func)
@@ -53,7 +54,8 @@ class _TerminalControl(UIControl):
             before_exec_func=before_exec_func,
             done_callback=done_callback,
             bell_func=bell_func,
-            has_priority=has_priority)
+            has_priority=has_priority,
+            sim_prompt=sim_prompt)
 
         self.on_content_changed = Event(self)
         self._running = False
@@ -221,11 +223,12 @@ class Terminal(object):
     """
     def __init__(self, command=['/bin/bash'], before_exec_func=None,
                  bell_func=None, style='', width=None, height=None,
-                 done_callback=None):
+                 done_callback=None, sim_prompt=False):
 
         self.terminal_control = _TerminalControl(
             command=command, before_exec_func=before_exec_func,
-            bell_func=bell_func, done_callback=done_callback)
+            bell_func=bell_func, done_callback=done_callback,
+            sim_prompt=sim_prompt)
 
         self.terminal_window = _Window(
             terminal_control=self.terminal_control,
