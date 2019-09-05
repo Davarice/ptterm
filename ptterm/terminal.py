@@ -59,6 +59,7 @@ class _TerminalControl(UIControl):
 
         self.on_content_changed = Event(self)
         self._running = False
+        self._sim = sim_prompt
 
     def create_content(self, width, height):
         # Report dimensions to the process.
@@ -196,7 +197,7 @@ class _TerminalControl(UIControl):
                         six.unichr(y + 33)))
 
     def is_focusable(self):
-        return not self.process.suspended
+        return not (self.process.suspended or self._sim)
 
 
 class _Window(Window):
