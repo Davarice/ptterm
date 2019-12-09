@@ -2,9 +2,9 @@
 The child process.
 """
 from __future__ import unicode_literals
+from asyncio import get_event_loop
 
 from prompt_toolkit.document import Document
-from prompt_toolkit.eventloop import get_event_loop
 from prompt_toolkit.utils import is_windows
 from six.moves import range
 from six import text_type
@@ -13,8 +13,8 @@ from .key_mappings import prompt_toolkit_key_to_vt100_key
 from .screen import BetterScreen
 from .stream import BetterStream
 
-import os
-import time
+# import os
+# import time
 
 __all__ = (
     'Process',
@@ -151,36 +151,40 @@ class Process(object):
                 # could block the event loop.)
 
         if not self.terminal.closed:
-            def process():
+            # FIXME: At the time of this writing, I do not know what method is
+            #   best to replace `call_from_executor()`. For the time being I
+            #   have to accept the possibility of lockups.
+
+            # def process():
                 self.stream.feed(d)
                 self.invalidate()
 
-            # Feed directly, if this process has priority. (That is when this
-            # pane has the focus in any of the clients.)
-            if self.has_priority():
-                process()
-
-            # Otherwise, postpone processing until we have CPU time available.
-            else:
-                self.terminal.disconnect_reader()
-
-                def do_asap():
-                    " Process output and reconnect to event loop. "
-                    process()
-                    if not self.suspended:
-                        self.terminal.connect_reader()
-
-                # When the event loop is saturated because of CPU, we will
-                # postpone this processing max 'x' seconds.
-
-                # '1' seems like a reasonable value, because that way we say
-                # that we will process max 1k/1s in case of saturation.
-                # That should be enough to prevent the UI from feeling
-                # unresponsive.
-                timestamp = time.time() + 1
-
-                self.loop.call_from_executor(
-                    do_asap, _max_postpone_until=timestamp)
+            # # Feed directly, if this process has priority. (That is when this
+            # # pane has the focus in any of the clients.)
+            # if self.has_priority():
+            #     process()
+            #
+            # # Otherwise, postpone processing until we have CPU time available.
+            # else:
+            #     self.terminal.disconnect_reader()
+            #
+            #     def do_asap():
+            #         " Process output and reconnect to event loop. "
+            #         process()
+            #         if not self.suspended:
+            #             self.terminal.connect_reader()
+            #
+            #     # When the event loop is saturated because of CPU, we will
+            #     # postpone this processing max 'x' seconds.
+            #
+            #     # '1' seems like a reasonable value, because that way we say
+            #     # that we will process max 1k/1s in case of saturation.
+            #     # That should be enough to prevent the UI from feeling
+            #     # unresponsive.
+            #     timestamp = time.time() + 1
+            #
+            #     self.loop.call_from_executor(
+            #         do_asap, _max_postpone_until=timestamp)
         else:
             # End of stream. Remove child.
             self.terminal.disconnect_reader()

@@ -4,7 +4,7 @@ The layout engine. This builds the prompt_toolkit layout.
 """
 from __future__ import unicode_literals
 
-from prompt_toolkit.application.current import get_app, NoRunningApplicationError
+from prompt_toolkit.application.current import get_app  #, NoRunningApplicationError
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import Condition, has_selection
@@ -40,13 +40,7 @@ class _TerminalControl(UIControl):
         def has_priority():
             # Give priority to the processing of this terminal output, if this
             # user control has the focus.
-            try:
-                app = get_app(raise_exception=True)
-            except NoRunningApplicationError:
-                # The application has terminated before this process ended.
-                return False
-            else:
-                return app.layout.has_focus(self)
+            return get_app().layout.has_focus(self)
 
         self.process = Process(
             lambda: self.on_content_changed.fire(),
